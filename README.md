@@ -1,30 +1,26 @@
-# issue-tracker
+# gitosis-webhook
 
-Simple, clean, issue tracking system.
+GitHub style post-receive webhooks for gitosis.
 
 
 ## Requirements
 
-To run this application on your server, you will need to have a web server with PHP installed and one MySQL database.
+To run this script on your server, you will need to have your own installation of gitosis.
 
 
 ## Installation
 
-This application is designed to be run on a LAMP development platform. The scripts and configuration files cannot be run through a desktop environment. One MySQL database is needed in order to store all data for this application. You will need to edit the `config.php` file with your database connection information.
-
-The website is accessible via desktop web browser by browsing to the installation directory on your web server.
+This script is designed to be run on a private installation of gitosis as a post-receive hook for your repositories.
 
 
 ## Usage
 
-This application is a web interface. Simply enter the URL that you setup during installation into any web browser and you should have access to the the application. You can add or remove projects, issues, and comments.
-
-A live demo of the application is coming soon.
+The first line of this script allows you to specify a URL to which a JSON payload containing information about your commits is POSTed after each successful push to your repository. 
 
 
 ## Disclaimer
 
-Use this application at your own risk. While this application has been tested thoroughly, on the above requirements, your mileage may vary. I take no responsibility for any harmful actions this application might cause.
+Use this script at your own risk. While this script has been tested thoroughly, on the above requirements, your mileage may vary. I take no responsibility for any harmful actions this script might cause.
 
 
 ## License

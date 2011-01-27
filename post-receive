@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+# webhook URL: this URL is hit with a POST request when you push
+url="http://www.postbin.org/w6zemu"
+
+
+oldhead=$1
+newhead=$2
+refname=$3
+
+refname=${refname##refs/heads/}
+
+gitver=$(git --version)
+gitver=${gitver##* }
+
+rev=$(git describe ${newhead} 2>/dev/null)
+[[ -z ${rev} ]] && rev=${newhead:0:12}
+
+rawcommit=$(git cat-file commit ${newhead})
+
+author=$(sed -n -e '/^author \([^<]*\).*$/s--\1-p' \
+	<<< "${rawcommit}")
+author=$(echo ${author} | sed -e 's/[ ]*$//')
+
+email=$(sed -n -e '/^author .*<\([^>]*\).*$/s--\1-p' \
+	<<< "${rawcommit}")
+
+logmessage=$(sed -e '1,/^$/d' <<< "${rawcommit}")
+logmessage=${logmessage//&/&amp;}
+logmessage=${logmessage//</&lt;}
+logmessage=${logmessage//>/&gt;}
+
+ts=$(sed -n -e '/^author .*> \([0-9]\+\).*$/s--\1-p' \
+	<<< "${rawcommit}")
+
+out="
+{
+  \"after\": \"${newhead}\", 
+  \"before\": \"${oldhead}\", 
+  \"commits\": [
+    {
+      \"added\": [
+$(git diff-tree -r --name-only --diff-filter=A ${newhead} | sed -e '1d' -e 's-.*-        \"&\",-' | sed -e '$s/,//')
+      ], 
+      \"author\": {
+        \"email\": \"${email}\", 
+        \"name\": \"${author}\"
+      }, 
+      \"id\": \"${rev}\", 
+      \"message\": \"${logmessage}\", 
+      \"modified\": [
+$(git diff-tree -r --name-only --diff-filter=M ${newhead} | sed -e '1d' -e 's-.*-        \"&\",-' | sed -e '$s/,//')
+      ], 
+      \"removed\": [
+$(git diff-tree -r --name-only --diff-filter=D ${newhead} | sed -e '1d' -e 's-.*-        \"&\",-' | sed -e '$s/,//')
+      ], 
+      \"timestamp\": \"${ts}\"
+    }
+  ], 
+  \"ref\": \"${refname}\"
+}"
+
+wget --post-data "payload=${out}" ${url}

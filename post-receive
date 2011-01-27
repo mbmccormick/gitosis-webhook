@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # webhook URL: this URL is hit with a POST request when you push
 url="http://www.postbin.org/w6zemu"
 
+set +v
 
 oldhead=$1
 newhead=$2
@@ -60,4 +61,4 @@ $(git diff-tree -r --name-only --diff-filter=D ${newhead} | sed -e '1d' -e 's-.*
   \"ref\": \"${refname}\"
 }"
 
-wget --post-data "payload=${out}" ${url}
+wget --post-data "payload=${out}" ${url} >> /dev/null

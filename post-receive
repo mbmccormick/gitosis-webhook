@@ -1,8 +1,13 @@
 #!/bin/sh
 
-# webhook URL: this URL is hit with a POST request when you push
-url="http://www.postbin.org/w6zemu"
-
+# webhook post_url: this URL is hit with a POST request when you push
+post_url="http://www.postbin.org/q3dil8"
+repo_url="http://server"
+commit_url="http://server/commit/"
+repo_name="reponame"
+repo_owner_name="Owner name"
+repo_owner_email="name@domain.com"
+repo_desc="Description of the repo"
 
 read oldrev newrev refname
 
@@ -17,11 +22,11 @@ rev=$(git describe ${newrev} 2>/dev/null)
 rawcommit=$(git cat-file commit ${newrev})
 
 author=$(sed -n -e '/^author \([^<]*\).*$/s--\1-p' \
-	<<< "${rawcommit}")
+  <<< "${rawcommit}")
 author=$(echo ${author} | sed -e 's/[ ]*$//')
 
 email=$(sed -n -e '/^author .*<\([^>]*\).*$/s--\1-p' \
-	<<< "${rawcommit}")
+  <<< "${rawcommit}")
 
 logmessage=$(sed -e '1,/^$/d' <<< "${rawcommit}")
 logmessage=${logmessage//&/&amp;}
@@ -29,7 +34,7 @@ logmessage=${logmessage//</&lt;}
 logmessage=${logmessage//>/&gt;}
 
 ts=$(sed -n -e '/^author .*> \([0-9]\+\).*$/s--\1-p' \
-	<<< "${rawcommit}")
+  <<< "${rawcommit}")
 
 out="
 {
@@ -52,10 +57,22 @@ $(git diff-tree -r --name-only --diff-filter=M ${newrev} | sed -e '1d' -e 's-.*-
       \"removed\": [
 $(git diff-tree -r --name-only --diff-filter=D ${newrev} | sed -e '1d' -e 's-.*-        \"&\",-' | sed -e '$s/,//')
       ], 
-      \"timestamp\": \"${ts}\"
+      \"timestamp\": \"${ts}\",
+      \"url\": \"${commit_url}${newrev}\"
     }
   ], 
-  \"ref\": \"${refname}\"
+  \"ref\": \"${refname}\",
+  \"repository\": 
+  {
+    \"url\": \"${repo_url}\",
+    \"name\": \"${repo_name}\",
+    \"description\": \"${repo_desc}\",
+    \"owner\":
+    {
+      \"name\": \"${repo_owner_name}\",
+      \"email\": \"${repo_owner_email}\"
+    }
+  }
 }"
 
-wget --post-data "payload=${out}" ${url} --quiet -o /dev/null
+wget --post-data "payload=${out}" ${post_url} --quiet -o /dev/null
